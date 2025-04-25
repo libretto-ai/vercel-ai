@@ -126,13 +126,6 @@ export const librettoMiddleware: LanguageModelV1Middleware = {
   },
 
   wrapGenerate: async ({ doGenerate, params, model }) => {
-    // Remove the prompt from the data we save as metadata
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { inputFormat } = params;
-
-    const librettoParams = params.providerMetadata
-      ?.librettoOptions as LibrettoCreateOptions;
-
     //
     // DO ACTUAL CALL
     const now = Date.now();
@@ -141,10 +134,15 @@ export const librettoMiddleware: LanguageModelV1Middleware = {
     // END ACTUAL CALL
     //
 
+    // Grab any libretto params
+    const librettoParams = params.providerMetadata
+      ?.librettoOptions as LibrettoCreateOptions;
+
     // Similar code as in openai/anthropic libretto sdks
     const feedbackKey = librettoParams?.feedbackKey ?? crypto.randomUUID();
     const promptTemplateName = librettoParams?.promptTemplateName;
 
+    // This is an expected format of fields in the server
     const responseMetrics: ResponseMetrics = {
       usage: returnValue.usage,
       finish_reason: returnValue.finishReason,
@@ -157,6 +155,7 @@ export const librettoMiddleware: LanguageModelV1Middleware = {
     // Need to get the model id parsed correctly as well
     const modelId = parseModelId(model.modelId);
 
+    // Remove known things we don't want to save as metadata
     const rawCallSettings = Object.fromEntries(
       Object.entries(returnValue.rawCall?.rawSettings ?? {}).filter(
         ([key]) => !RAW_CALL_SETTINGS_REMOVAL_KEYS.includes(key),
@@ -169,7 +168,7 @@ export const librettoMiddleware: LanguageModelV1Middleware = {
       ...rawCallSettings,
       modelProvider,
       model: modelId,
-      modelType: INPUT_TO_LIBRETTO_METADATA[inputFormat],
+      modelType: INPUT_TO_LIBRETTO_METADATA[params.inputFormat],
     };
 
     // This is the provider specific response

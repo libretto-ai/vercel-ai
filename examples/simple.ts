@@ -1,6 +1,3 @@
-import { anthropic } from "@ai-sdk/anthropic";
-import { google } from "@ai-sdk/google";
-import { groq } from "@ai-sdk/groq";
 import { openai } from "@ai-sdk/openai";
 import { generateText, LanguageModelV1, wrapLanguageModel } from "ai";
 import { librettoMiddleware } from "../src/middleware";
@@ -40,6 +37,6 @@ async function main(model: LanguageModelV1) {
 }
 
 main(openai("gpt-4o-mini"));
-main(anthropic("claude-3-5-sonnet-20240620"));
-main(google("models/gemini-2.0-flash-exp"));
-main(groq("llama-3.3-70B-versatile"));
+// main(anthropic("claude-3-5-sonnet-20240620"));
+// main(google("models/gemini-2.0-flash-exp"));
+// main(groq("llama-3.3-70B-versatile"));
