@@ -40,7 +40,7 @@
   },
   "dependencies": {
     "@libretto/core": "^1.2.0",
-    "ai": "^4.3.9"
+    "ai": "^4.3.10"
   },
   "volta": {
     "node": "20.13.1"
