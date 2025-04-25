@@ -16,10 +16,17 @@ export type ModelParameters = Record<string, unknown> & {
  */
 type GenerateTextParams = Parameters<typeof generateText>[0];
 
-export type LibrettoCreateParams = CoreLibrettoCreateParams<
+export type LibrettoCreateOptions = CoreLibrettoCreateParams<
   GenerateTextParams["messages"]
 > & {
   redactPii?: boolean;
+};
+
+/**
+ * Can be used on an individual message to specify Libretto options.
+ */
+export type LibrettoMessageOptions = {
+  isChatHistory?: boolean;
 };
 
 export type ResponseMetrics = {

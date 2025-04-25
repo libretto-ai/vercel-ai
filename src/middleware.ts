@@ -5,12 +5,14 @@ import {
   sendEvent,
 } from "@libretto/core";
 import {
+  CoreMessage,
   LanguageModelV1CallOptions,
   LanguageModelV1Middleware,
   LanguageModelV1Prompt,
 } from "ai";
 import {
-  LibrettoCreateParams,
+  LibrettoCreateOptions,
+  LibrettoMessageOptions,
   ModelParameters,
   ResponseMetrics,
   VercelAiToolCall,
@@ -29,19 +31,76 @@ const INPUT_TO_LIBRETTO_METADATA: Record<
 
 const RAW_CALL_SETTINGS_REMOVAL_KEYS = ["system", "systemInstruction"];
 
+const CHAT_HISTORY_ROLE = "chat_history";
+
+/**
+ * Substitute the role to be chat history if the message has that libretto option.
+ * This is a little hacky, but we need to have the chat history role set for
+ * Libretto to work correctly.
+ */
+export function modifyPromptForChatHistory(prompt: LanguageModelV1Prompt) {
+  let hasChatHistory = false;
+  const modifiedPrompt = prompt.map(({ providerMetadata, ...rest }) => {
+    const librettoOptions =
+      providerMetadata?.librettoOptions as LibrettoMessageOptions;
+
+    // If chat history is true for this message, change the role to "chat_history"
+    if (librettoOptions?.isChatHistory && "role" in rest) {
+      // Have to cast for typescript
+      rest["role"] = CHAT_HISTORY_ROLE as CoreMessage["role"];
+      hasChatHistory = true;
+    }
+
+    return rest;
+  });
+
+  return {
+    modifiedPrompt,
+    hasChatHistory,
+  };
+}
+
+/**
+ * Due to Vercel already having standardized the prompt into the format it needs,
+ * we need to ensure the chat history messages are also standardized.
+ *
+ * Right now only text parts are supported in chat history.
+ */
+export function standardizeChatHistory(messages: any[]) {
+  return messages.map((m) => {
+    if (
+      "role" in m &&
+      m.role !== "system" &&
+      "content" in m &&
+      !Array.isArray(m.content) &&
+      typeof m.content === "string"
+    ) {
+      return {
+        ...m,
+        content: [
+          {
+            type: "text",
+            text: m.content,
+          },
+        ],
+      };
+    }
+    return m;
+  });
+}
+
 export const librettoMiddleware: LanguageModelV1Middleware = {
   transformParams: async ({ params }) => {
     // Need to filter out the providerMedata from each element in the prompt
-    const slimmedPrompt = params.prompt.map(
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      ({ providerMetadata, ...rest }) => rest,
+    const { modifiedPrompt, hasChatHistory } = modifyPromptForChatHistory(
+      params.prompt,
     );
 
     // Wrap the prompt in Libretto's ObjectTemplate system for formatting
-    const librettoPromptTemplate = objectTemplate(slimmedPrompt);
+    const librettoPromptTemplate = objectTemplate(modifiedPrompt);
 
     const librettoParams = params.providerMetadata
-      ?.librettoOptions as LibrettoCreateParams;
+      ?.librettoOptions as LibrettoCreateOptions;
 
     // Resolve the messages using parameters
     const resolvedPrompt = getResolvedMessages(
@@ -54,9 +113,14 @@ export const librettoMiddleware: LanguageModelV1Middleware = {
       librettoParams.templateChat = resolvedPrompt.template as any[];
     }
 
+    // Unfortuntely, we have to hand standardize the chat history messages like vercel does automatically
+    const finalResolvedMessages = hasChatHistory
+      ? standardizeChatHistory(resolvedPrompt.messages as any[])
+      : resolvedPrompt.messages;
+
     // Now that we've resolved the materialized prompt, this is what needs to
     // be set back on the parameters.
-    params.prompt = resolvedPrompt.messages as LanguageModelV1Prompt;
+    params.prompt = finalResolvedMessages as LanguageModelV1Prompt;
 
     return params;
   },
@@ -67,7 +131,7 @@ export const librettoMiddleware: LanguageModelV1Middleware = {
     const { inputFormat } = params;
 
     const librettoParams = params.providerMetadata
-      ?.librettoOptions as LibrettoCreateParams;
+      ?.librettoOptions as LibrettoCreateOptions;
 
     //
     // DO ACTUAL CALL
@@ -150,7 +214,7 @@ export const librettoMiddleware: LanguageModelV1Middleware = {
 /**
  * Model ids can be entered in the format of "models/modelId" or just "modelId".
  */
-function parseModelId(modelId: string) {
+export function parseModelId(modelId: string) {
   if (modelId.includes("/")) {
     return modelId.split("/")[1];
   }

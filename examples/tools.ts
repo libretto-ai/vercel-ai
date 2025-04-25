@@ -5,7 +5,7 @@ import { openai } from "@ai-sdk/openai";
 import { generateText, LanguageModelV1, wrapLanguageModel } from "ai";
 import { z } from "zod";
 import { librettoMiddleware } from "../src/middleware";
-import { LibrettoCreateParams } from "../src/types";
+import { LibrettoCreateOptions } from "../src/types";
 
 async function main(model: LanguageModelV1) {
   console.log(`Starting ${model.modelId} example with zod parameters...`);
@@ -40,7 +40,7 @@ async function main(model: LanguageModelV1) {
         templateParams: {
           location: "Austin, TX",
         },
-      } satisfies LibrettoCreateParams,
+      } satisfies LibrettoCreateOptions,
     },
   });
 

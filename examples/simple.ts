@@ -4,7 +4,7 @@ import { groq } from "@ai-sdk/groq";
 import { openai } from "@ai-sdk/openai";
 import { generateText, LanguageModelV1, wrapLanguageModel } from "ai";
 import { librettoMiddleware } from "../src/middleware";
-import { LibrettoCreateParams } from "../src/types";
+import { LibrettoCreateOptions } from "../src/types";
 
 async function main(model: LanguageModelV1) {
   console.log(`Starting ${model.modelId} example...`);
@@ -32,7 +32,7 @@ async function main(model: LanguageModelV1) {
           name: "Jamie",
           tone: "funny",
         },
-      } satisfies LibrettoCreateParams,
+      } satisfies LibrettoCreateOptions,
     },
   });
 
