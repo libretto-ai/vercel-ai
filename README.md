@@ -1,8 +1,8 @@
 # @libretto/vercel-ai
 
-Libretto AI's Middleware package for integrating with [Vercel's AI SDK](https://ai-sdk.dev/). 
+Libretto AI's Middleware package for integrating with [Vercel's AI SDK](https://ai-sdk.dev/).
 
-NOTE: Currently only the `generate` functionality is captured in Libretto, streaming is *not* supported in this current release.
+NOTE: Currently only the `generate` functionality is captured in Libretto, streaming is _not_ supported in this current release.
 
 ## Installation
 
@@ -15,7 +15,6 @@ npm install @libretto/vercel-ai
 Vercel's documentation on [Language Model Middleware](https://ai-sdk.dev/docs/ai-sdk-core/middleware#language-model-middleware) contains the best documentation for using Middleware in general.
 
 For capturing all requests in Libretto made through the Vercel AI SDK though, you can do the following:
-
 
 ```typescript
 ...
@@ -52,6 +51,6 @@ const { text } = await generateText({
 
 ```
 
-`librettoOptions` is where you can set the usual Libretto settings. 
+`librettoOptions` is where you can set the usual Libretto settings.
 
 For all settings, you can see them here: [Lirbetto Core Create Options](https://github.com/libretto-ai/core-ts/blob/main/src/types.ts#L17)
